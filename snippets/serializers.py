@@ -21,11 +21,11 @@ class SnippetSerializer(serializers.Serializer):
         """
         Update and return an existing 'Snippet' instance, given the validated data
         """
-        instance.title = validated_data('title', instance.title)
-        instance.code = validated_data('code', instance.code)
-        instance.line_nos = validated_data('line_nos', instance.line_nos)
-        instance.language = validated_data('language', instance.language)
-        instance.style = validated_data('style', instance.style)
+        instance.title = validated_data.get('title', instance.title)
+        instance.code = validated_data.get('code', instance.code)
+        instance.line_nos = validated_data.get('line_nos', instance.line_nos)
+        instance.language = validated_data.get('language', instance.language)
+        instance.style = validated_data.get('style', instance.style)
 
         instance.save()
         return instance
