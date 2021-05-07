@@ -43,6 +43,23 @@ class SnippetDetailView(generics.RetrieveUpdateDestroyAPIView):
     ]
 
 
+class SnippetHighlightView(generics.GenericAPIView):
+    """
+    HTML endpoint for highlighted snippets
+    """
+    queryset = Snippet.objects.all()
+
+    # Render pre-rendered HTML
+    renderer_classes = [renderers.StaticHTMLRenderer]
+
+    def get(self, request, *args, **kwargs):
+        """
+        Custom get method that returns an object ATTRIBUTE
+        """
+        snippet = self.get_object()
+        return Response(snippet.highlighted)
+
+
 class UserListView(generics.ListAPIView):
     """
     Read-only list view for the user representation
@@ -67,21 +84,3 @@ def api_root(request, format=None):
         'users': reverse('user-list', request=request, format=format),
         'snippets': reverse('snippet-list', request=request, format=format),
     })
-
-
-
-class SnipperHighlightView(generics.GenericAPIView):
-    """
-    HTML endpoint for highlighted snippets
-    """
-    queryset = Snippet.objects.all()
-
-    # Render pre-rendered HTML
-    renderer_classes = [renderers.StaticHTMLRenderer]
-
-    def get(self, request, *args, **kwargs):
-        """
-        Custom get method that returns an object ATTRIBUTE
-        """
-        snippet = self.get_object()
-        return Response(snippet.highlighted)
