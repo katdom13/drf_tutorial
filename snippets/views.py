@@ -55,13 +55,3 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-
-@api_view(["GET"])
-def api_root(request, format=None):
-    # We're using REST framework's reverse function in order to return fully-qualified URLs
-    # URL patterns are identified by convenience names declared in snippets/urls.py
-    return Response({
-        'users': reverse('user-list', request=request, format=format),
-        'snippets': reverse('snippet-list', request=request, format=format),
-    })
