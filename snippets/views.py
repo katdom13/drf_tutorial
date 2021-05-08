@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
-from rest_framework import generics, permissions, renderers
-from rest_framework.decorators import api_view
+from rest_framework import permissions, renderers, viewsets
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
@@ -9,28 +9,14 @@ from .permissions import IsOwnerOrReadOnly
 from .serializers import SnippetSerializer, UserSerializer
 
 
-class SnippetListView(generics.ListCreateAPIView):
+# We use the ModelViewSet class in order to get the
+# complete set of default read and write operations.
+class SnippetViewSet(viewsets.ModelViewSet):
     """
-    List all snippets, or create a new snippet
-    """
-    queryset = Snippet.objects.all()
-    serializer_class = SnippetSerializer
+    This viewset automatically provides 'list', 'create', 'retrieve',
+    'update', and 'destroy' actions
 
-    # Ensure that authenticated requests get read-write access,
-    # and unauthenticated requests get read-only access
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    """
-    Associate the snippet and the user who created the snippet
-    by modifying how the instance is saved
-    """
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
-class SnippetDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve, update, or delete a code snippet
+    Additionally, we also provide an extra 'highlight' action
     """
     queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
@@ -42,35 +28,30 @@ class SnippetDetailView(generics.RetrieveUpdateDestroyAPIView):
         IsOwnerOrReadOnly
     ]
 
-
-class SnippetHighlightView(generics.GenericAPIView):
-    """
-    HTML endpoint for highlighted snippets
-    """
-    queryset = Snippet.objects.all()
-
-    # Render pre-rendered HTML
-    renderer_classes = [renderers.StaticHTMLRenderer]
-
-    def get(self, request, *args, **kwargs):
+    # This decorator can be used to add any custom endpoints
+    # that don't fit into the standard create/update/delete style
+    # custom actions which use the @action decorator will respond to GET requests by default
+    # We can use the methods argument if we wanted an action that responded to POST requests
+    # The URLs for custom actions by default depend on the method name itself
+    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    def highlight(self, request, *args, **kwargs):
         """
-        Custom get method that returns an object ATTRIBUTE
+        Custom action method that returns an object ATTRIBUTE
         """
         snippet = self.get_object()
         return Response(snippet.highlighted)
 
-
-class UserListView(generics.ListAPIView):
     """
-    Read-only list view for the user representation
+    Associate the snippet and the user who created the snippet
+    by modifying how the instance is saved
     """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
-class UserDetailView(generics.RetrieveAPIView):
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Read-only detail view for a user
+    This viewset automatically provides 'list' and 'retrieve' actions
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
